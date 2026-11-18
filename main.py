@@ -10,10 +10,19 @@
 # Run it outside the grader's container with:
 #   mkdir -p out && MAKEFUN_OUTPUT_DIR=out python3 main.py
 
+import hashlib
 import os
 import shutil
 import sys
 from pathlib import Path
+
+
+def sha256_of(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(65536), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def main():
@@ -32,6 +41,10 @@ def main():
             file=sys.stderr,
         )
         return 1
+    if sha256_of(dst) != sha256_of(src):
+        print("error: output hash mismatch after copy", file=sys.stderr)
+        return 1
+    print(f"wrote {dst} ({dst.stat().st_size} bytes, sha256 verified)")
     return 0
 
 
